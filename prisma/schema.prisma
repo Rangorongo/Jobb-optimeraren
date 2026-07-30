@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum JobMatchStatus {
+  FORESLAGEN
+  ANSOKT
+  INTERVJU
+  AVSLAG
+}
+
+enum DocumentType {
+  CV
+  COVER_LETTER
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String?
+  authProvider  String
+  createdAt     DateTime @default(now())
+
+  profile    Profile?
+  jobMatches JobMatch[]
+}
+
+model Profile {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  preferences    Json
+  structuredCv   Json?
+  masterCvFileUrl String?
+  updatedAt      DateTime @updatedAt
+
+  @@map("profiles")
+}
+
+model JobMatch {
+  id             String         @id @default(cuid())
+  userId         String
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  externalJobId  String
+  jobTitle       String
+  employer       String
+  url            String
+  rawAdText      String
+  matchScore     Float?
+  status         JobMatchStatus @default(FORESLAGEN)
+  deadline       DateTime?
+  createdAt      DateTime       @default(now())
+
+  documents      GeneratedDocument[]
+  interviewGuide InterviewGuide?
+
+  @@unique([userId, externalJobId])
+  @@map("job_matches")
+}
+
+model GeneratedDocument {
+  id         String       @id @default(cuid())
+  jobMatchId String
+  jobMatch   JobMatch     @relation(fields: [jobMatchId], references: [id], onDelete: Cascade)
+  type       DocumentType
+  pdfUrl     String
+  createdAt  DateTime     @default(now())
+
+  @@map("generated_documents")
+}
+
+model InterviewGuide {
+  id             String   @id @default(cuid())
+  jobMatchId     String   @unique
+  jobMatch       JobMatch @relation(fields: [jobMatchId], references: [id], onDelete: Cascade)
+  invitationText String
+  guideContent   String
+  createdAt      DateTime @default(now())
+
+  @@map("interview_guides")
+}
