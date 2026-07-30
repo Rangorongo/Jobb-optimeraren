@@ -1,9 +1,6 @@
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
-import { anthropic, type StructuredCv } from "./anthropic";
+import { assertGeminiOk, gemini, MODEL, type StructuredCv } from "./gemini";
 import type { JobAd } from "./jobtech";
-
-const MODEL = "claude-opus-5";
 
 const ScoredMatchesSchema = z.object({
   matches: z.array(
@@ -29,24 +26,24 @@ export async function scoreJobMatches(
     )
     .join("\n\n---\n\n");
 
-  const response = await anthropic.messages.parse({
+  const response = await gemini.models.generateContent({
     model: MODEL,
-    max_tokens: 2048,
-    thinking: { type: "adaptive" },
-    output_config: {
-      effort: "medium",
-      format: zodOutputFormat(ScoredMatchesSchema),
+    contents: `Bedöm hur väl varje jobbannons nedan matchar kandidatens profil. Ge varje annons en poäng mellan 0 och 1 (1 = perfekt matchning), baserat på erfarenhet, kompetenser och roll.\n\nKandidatprofil:\n${JSON.stringify(cv)}\n\nAnnonser:\n${adsSummary}`,
+    config: {
+      responseMimeType: "application/json",
+      responseJsonSchema: z.toJSONSchema(ScoredMatchesSchema),
+      thinkingConfig: { thinkingBudget: -1 },
     },
-    messages: [
-      {
-        role: "user",
-        content: `Bedöm hur väl varje jobbannons nedan matchar kandidatens profil. Ge varje annons en poäng mellan 0 och 1 (1 = perfekt matchning), baserat på erfarenhet, kompetenser och roll.\n\nKandidatprofil:\n${JSON.stringify(cv)}\n\nAnnonser:\n${adsSummary}`,
-      },
-    ],
   });
 
+  assertGeminiOk(response);
+
+  const parsed = ScoredMatchesSchema.safeParse(JSON.parse(response.text ?? ""));
   const scores = new Map<string, number>();
-  for (const match of response.parsed_output?.matches ?? []) {
+  if (!parsed.success) {
+    return scores;
+  }
+  for (const match of parsed.data.matches) {
     scores.set(match.externalJobId, match.score);
   }
   return scores;

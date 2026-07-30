@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { JobAd } from "./jobtech";
 
-const parseMock = vi.fn();
+const generateContentMock = vi.fn();
 
-vi.mock("@anthropic-ai/sdk", () => {
-  class FakeAnthropic {
-    messages = { parse: parseMock };
+vi.mock("@google/genai", () => {
+  class FakeGoogleGenAI {
+    models = { generateContent: generateContentMock };
   }
-  return { default: FakeAnthropic };
+  return { GoogleGenAI: FakeGoogleGenAI };
 });
 
 const { scoreJobMatches } = await import("./matching");
@@ -42,17 +42,18 @@ const ads: JobAd[] = [
 
 describe("scoreJobMatches", () => {
   beforeEach(() => {
-    parseMock.mockReset();
+    generateContentMock.mockReset();
   });
 
   it("returns a score map keyed by externalJobId", async () => {
-    parseMock.mockResolvedValue({
-      parsed_output: {
+    generateContentMock.mockResolvedValue({
+      candidates: [{ finishReason: "STOP" }],
+      text: JSON.stringify({
         matches: [
           { externalJobId: "job-1", score: 0.9 },
           { externalJobId: "job-2", score: 0.1 },
         ],
-      },
+      }),
     });
 
     const scores = await scoreJobMatches(fakeCv, ads);
@@ -61,10 +62,10 @@ describe("scoreJobMatches", () => {
     expect(scores.get("job-2")).toBe(0.1);
   });
 
-  it("returns an empty map without calling Claude when there are no ads", async () => {
+  it("returns an empty map without calling Gemini when there are no ads", async () => {
     const scores = await scoreJobMatches(fakeCv, []);
 
     expect(scores.size).toBe(0);
-    expect(parseMock).not.toHaveBeenCalled();
+    expect(generateContentMock).not.toHaveBeenCalled();
   });
 });

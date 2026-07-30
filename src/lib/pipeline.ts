@@ -1,4 +1,4 @@
-import type { StructuredCv } from "./anthropic";
+import type { StructuredCv } from "./gemini";
 import { generateApplicationDocuments } from "./documents";
 import { sendNewMatchesEmail } from "./email";
 import { searchJobs } from "./jobtech";

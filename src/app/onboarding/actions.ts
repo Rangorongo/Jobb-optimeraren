@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { structureCv } from "@/lib/anthropic";
+import { structureCv } from "@/lib/gemini";
 import { extractTextFromPdf } from "@/lib/cv-file";
 import { uploadFile } from "@/lib/storage";
 import { prisma } from "@/lib/prisma";

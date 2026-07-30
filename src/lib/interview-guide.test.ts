@@ -1,12 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const createMock = vi.fn();
+const generateContentMock = vi.fn();
 
-vi.mock("@anthropic-ai/sdk", () => {
-  class FakeAnthropic {
-    beta = { messages: { create: createMock } };
+vi.mock("@google/genai", () => {
+  class FakeGoogleGenAI {
+    models = { generateContent: generateContentMock };
   }
-  return { default: FakeAnthropic };
+  return { GoogleGenAI: FakeGoogleGenAI };
 });
 
 const { generateInterviewGuide } = await import("./interview-guide");
@@ -19,18 +19,13 @@ const jobMatch = {
 
 describe("generateInterviewGuide", () => {
   beforeEach(() => {
-    createMock.mockReset();
+    generateContentMock.mockReset();
   });
 
-  it("returns the sanitized guide content from Claude", async () => {
-    createMock.mockResolvedValue({
-      stop_reason: "end_turn",
-      content: [
-        {
-          type: "text",
-          text: "<h2>Om företaget</h2><p>Acme AB.</p><script>alert(1)</script>",
-        },
-      ],
+  it("returns the sanitized guide content from Gemini", async () => {
+    generateContentMock.mockResolvedValue({
+      candidates: [{ finishReason: "STOP" }],
+      text: "<h2>Om företaget</h2><p>Acme AB.</p><script>alert(1)</script>",
     });
 
     const guide = await generateInterviewGuide(
@@ -42,8 +37,22 @@ describe("generateInterviewGuide", () => {
     expect(guide).not.toContain("<script>");
   });
 
-  it("throws when Claude refuses to generate the guide", async () => {
-    createMock.mockResolvedValue({ stop_reason: "refusal", content: [] });
+  it("strips a markdown code fence Gemini sometimes wraps the HTML in", async () => {
+    generateContentMock.mockResolvedValue({
+      candidates: [{ finishReason: "STOP" }],
+      text: "```html\n<h2>Om företaget</h2><p>Acme AB.</p>\n```",
+    });
+
+    const guide = await generateInterviewGuide(jobMatch, "Kallelsetext");
+
+    expect(guide).toBe("<h2>Om företaget</h2><p>Acme AB.</p>");
+  });
+
+  it("throws when Gemini blocks the response", async () => {
+    generateContentMock.mockResolvedValue({
+      candidates: [{ finishReason: "SAFETY" }],
+      text: "",
+    });
 
     await expect(
       generateInterviewGuide(jobMatch, "Kallelsetext"),
