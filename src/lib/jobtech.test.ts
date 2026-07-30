@@ -63,6 +63,22 @@ describe("searchJobs", () => {
     expect(calledUrl.searchParams.get("trainee")).toBe("true");
   });
 
+  it("omits the q param when roles is empty (e.g. students)", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ hits: [] }) });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await searchJobs({
+      roles: [],
+      municipalityIds: ["AvNB_uwa_6n6"],
+      employmentTypes: ["INTERNSHIP"],
+    });
+
+    const calledUrl = new URL(fetchMock.mock.calls[0][0]);
+    expect(calledUrl.searchParams.has("q")).toBe(false);
+  });
+
   it("throws when the API responds with an error status", async () => {
     vi.stubGlobal(
       "fetch",

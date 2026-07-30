@@ -11,19 +11,20 @@ const EDUCATION_LEVEL_OPTIONS: { value: EducationLevel; label: string }[] = [
 ];
 
 export function StudentInfoFields({
-  defaultIsStudent = false,
+  isStudent,
+  onIsStudentChange,
   defaultEducationLevel = null,
   defaultGymnasieProgram = "",
   defaultEducationName = "",
   defaultInstitutionName = "",
 }: {
-  defaultIsStudent?: boolean;
+  isStudent: boolean;
+  onIsStudentChange: (isStudent: boolean) => void;
   defaultEducationLevel?: EducationLevel | null;
   defaultGymnasieProgram?: string;
   defaultEducationName?: string;
   defaultInstitutionName?: string;
 }) {
-  const [isStudent, setIsStudent] = useState(defaultIsStudent);
   const [level, setLevel] = useState<EducationLevel | null>(
     defaultEducationLevel,
   );
@@ -36,7 +37,7 @@ export function StudentInfoFields({
           name="isStudent"
           value="true"
           checked={isStudent}
-          onChange={(e) => setIsStudent(e.target.checked)}
+          onChange={(e) => onIsStudentChange(e.target.checked)}
         />
         Jag är student
       </label>
@@ -67,7 +68,7 @@ export function StudentInfoFields({
               <select
                 name="gymnasieProgram"
                 defaultValue={defaultGymnasieProgram}
-                className="rounded border border-black/[.1] px-3 py-2 dark:border-white/[.15] dark:bg-transparent"
+                className="rounded border border-black/[.1] bg-white px-3 py-2 text-black"
               >
                 <option value="">Välj program...</option>
                 {GYMNASIEPROGRAM.map((program) => (

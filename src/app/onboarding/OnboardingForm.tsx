@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { MunicipalityPicker } from "@/components/MunicipalityPicker";
 import { EmploymentTypeCheckboxes } from "@/components/EmploymentTypeCheckboxes";
 import { StudentInfoFields } from "@/components/StudentInfoFields";
@@ -13,18 +13,23 @@ export function OnboardingForm() {
     submitOnboarding,
     initialState,
   );
+  const [isStudent, setIsStudent] = useState(false);
 
   return (
     <form action={formAction} className="flex flex-col gap-4 max-w-md">
-      <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium">Roller (kommaseparerat)</span>
-        <input
-          name="roles"
-          placeholder="Frontend-utvecklare, Projektledare"
-          className="rounded border border-black/[.1] px-3 py-2 dark:border-white/[.15] dark:bg-transparent"
-          required
-        />
-      </label>
+      <StudentInfoFields isStudent={isStudent} onIsStudentChange={setIsStudent} />
+
+      {!isStudent && (
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium">Roller (kommaseparerat)</span>
+          <input
+            name="roles"
+            placeholder="Frontend-utvecklare, Projektledare"
+            className="rounded border border-black/[.1] px-3 py-2 dark:border-white/[.15] dark:bg-transparent"
+            required
+          />
+        </label>
+      )}
 
       <div className="flex flex-col gap-1">
         <span className="text-sm font-medium">Kommuner</span>
@@ -35,8 +40,6 @@ export function OnboardingForm() {
         <span className="text-sm font-medium">Typ av anställning</span>
         <EmploymentTypeCheckboxes name="employmentTypes" />
       </div>
-
-      <StudentInfoFields />
 
       <label className="flex flex-col gap-1">
         <span className="text-sm font-medium">Master-CV (PDF)</span>

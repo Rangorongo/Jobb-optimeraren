@@ -73,6 +73,8 @@ function parseStudentInfo(formData: FormData): StudentInfo {
 export function parsePreferencesFromFormData(
   formData: FormData,
 ): ParsePreferencesResult {
+  const student = parseStudentInfo(formData);
+
   const roles = String(formData.get("roles") ?? "")
     .split(",")
     .map((s) => s.trim())
@@ -90,14 +92,15 @@ export function parsePreferencesFromFormData(
       VALID_EMPLOYMENT_TYPES.includes(v as EmploymentType),
     );
 
-  if (roles.length === 0) {
+  // Students don't fill in the roles field (it's hidden in the form) - a
+  // named professional role doesn't really apply, so fall back to
+  // municipality + employment type (e.g. Praktik) to narrow the search.
+  if (!student.isStudent && roles.length === 0) {
     return { ok: false, error: "Ange minst en roll." };
   }
   if (municipalityIds.length === 0) {
     return { ok: false, error: "Välj minst en kommun." };
   }
-
-  const student = parseStudentInfo(formData);
 
   return {
     ok: true,

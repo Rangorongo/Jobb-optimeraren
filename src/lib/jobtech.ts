@@ -38,7 +38,10 @@ export async function searchJobs(
   limit = 20,
 ): Promise<JobAd[]> {
   const params = new URLSearchParams();
-  params.set("q", preferences.roles.join(" "));
+  const q = preferences.roles.join(" ").trim();
+  if (q) {
+    params.set("q", q);
+  }
   params.set("limit", String(limit));
 
   for (const municipalityId of preferences.municipalityIds) {

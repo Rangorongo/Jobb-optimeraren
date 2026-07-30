@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { MunicipalityPicker } from "@/components/MunicipalityPicker";
 import { EmploymentTypeCheckboxes } from "@/components/EmploymentTypeCheckboxes";
 import { StudentInfoFields } from "@/components/StudentInfoFields";
@@ -34,18 +34,30 @@ export function ProfileForm({
     updateProfile,
     initialState,
   );
+  const [isStudent, setIsStudent] = useState(defaultIsStudent);
 
   return (
     <form action={formAction} className="flex flex-col gap-4 max-w-md">
-      <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium">Roller (kommaseparerat)</span>
-        <input
-          name="roles"
-          defaultValue={defaultRoles}
-          className="rounded border border-black/[.1] px-3 py-2 dark:border-white/[.15] dark:bg-transparent"
-          required
-        />
-      </label>
+      <StudentInfoFields
+        isStudent={isStudent}
+        onIsStudentChange={setIsStudent}
+        defaultEducationLevel={defaultEducationLevel}
+        defaultGymnasieProgram={defaultGymnasieProgram}
+        defaultEducationName={defaultEducationName}
+        defaultInstitutionName={defaultInstitutionName}
+      />
+
+      {!isStudent && (
+        <label className="flex flex-col gap-1">
+          <span className="text-sm font-medium">Roller (kommaseparerat)</span>
+          <input
+            name="roles"
+            defaultValue={defaultRoles}
+            className="rounded border border-black/[.1] px-3 py-2 dark:border-white/[.15] dark:bg-transparent"
+            required
+          />
+        </label>
+      )}
 
       <div className="flex flex-col gap-1">
         <span className="text-sm font-medium">Kommuner</span>
@@ -62,14 +74,6 @@ export function ProfileForm({
           defaultValues={defaultEmploymentTypes}
         />
       </div>
-
-      <StudentInfoFields
-        defaultIsStudent={defaultIsStudent}
-        defaultEducationLevel={defaultEducationLevel}
-        defaultGymnasieProgram={defaultGymnasieProgram}
-        defaultEducationName={defaultEducationName}
-        defaultInstitutionName={defaultInstitutionName}
-      />
 
       <label className="flex flex-col gap-1">
         <span className="text-sm font-medium">Master-CV (PDF)</span>
