@@ -48,9 +48,10 @@ export async function submitOnboarding(
   try {
     const cvText = await extractTextFromPdf(buffer);
     structuredCv = await structureCv(cvText);
-  } catch {
+  } catch (err) {
     // CV-parsing misslyckades - blockera inte onboarding, spara utan strukturerad data.
     // Kunden kan komplettera profilen manuellt senare.
+    console.error(`CV-strukturering misslyckades för user ${session.user.id}`, err);
   }
 
   await prisma.profile.upsert({

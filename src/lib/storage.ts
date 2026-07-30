@@ -1,29 +1,21 @@
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
+import { mkdir, writeFile } from "fs/promises";
+import path from "path";
 
-const s3 = new S3Client({
-  region: "auto",
-  endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  credentials: {
-    accessKeyId: process.env.R2_ACCESS_KEY_ID ?? "",
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY ?? "",
-  },
-});
-
-const BUCKET = process.env.R2_BUCKET_NAME ?? "";
-const PUBLIC_URL = process.env.R2_PUBLIC_URL ?? "";
+// Prototype stand-in for cloud object storage (Cloudflare R2/S3). Files are
+// written outside of public/ (Next.js's static file serving doesn't pick up
+// files created after the server starts) and served back through
+// /api/files/[...path] instead. Swap this out for a real object store before
+// deploying anywhere that doesn't keep a persistent local disk across
+// instances.
+const UPLOAD_DIR = path.join(process.cwd(), "storage", "uploads");
 
 export async function uploadFile(
   key: string,
   body: Buffer,
-  contentType: string,
+  _contentType: string,
 ): Promise<string> {
-  await s3.send(
-    new PutObjectCommand({
-      Bucket: BUCKET,
-      Key: key,
-      Body: body,
-      ContentType: contentType,
-    }),
-  );
-  return `${PUBLIC_URL}/${key}`;
+  const filePath = path.join(UPLOAD_DIR, ...key.split("/"));
+  await mkdir(path.dirname(filePath), { recursive: true });
+  await writeFile(filePath, body);
+  return `/api/files/${key}`;
 }
