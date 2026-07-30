@@ -1,7 +1,5 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
-
 export type NewMatchSummary = {
   jobTitle: string;
   employer: string;
@@ -11,6 +9,7 @@ export async function sendNewMatchesEmail(
   to: string,
   matches: NewMatchSummary[],
 ) {
+  const resend = new Resend(process.env.RESEND_API_KEY);
   const listHtml = matches
     .map((m) => `<li>${m.jobTitle} — ${m.employer}</li>`)
     .join("");

@@ -1,5 +1,6 @@
 import { anthropic, type StructuredCv } from "./anthropic";
 import type { JobAd } from "./jobtech";
+import { sanitizeGeneratedHtml } from "./sanitize";
 
 const MODEL = "claude-opus-5";
 
@@ -61,7 +62,11 @@ ${COVER_LETTER_MARKER}
   }
 
   return {
-    cvContentHtml: text.slice(cvStart + CV_MARKER.length, coverStart).trim(),
-    coverLetterHtml: text.slice(coverStart + COVER_LETTER_MARKER.length).trim(),
+    cvContentHtml: sanitizeGeneratedHtml(
+      text.slice(cvStart + CV_MARKER.length, coverStart).trim(),
+    ),
+    coverLetterHtml: sanitizeGeneratedHtml(
+      text.slice(coverStart + COVER_LETTER_MARKER.length).trim(),
+    ),
   };
 }
