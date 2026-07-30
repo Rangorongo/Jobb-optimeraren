@@ -8,9 +8,67 @@ const VALID_EMPLOYMENT_TYPES: EmploymentType[] = [
   "INTERNSHIP",
 ];
 
+export type EducationLevel = "GYMNASIUM" | "UNIVERSITY" | "FOLKHOGSKOLA";
+
+const VALID_EDUCATION_LEVELS: EducationLevel[] = [
+  "GYMNASIUM",
+  "UNIVERSITY",
+  "FOLKHOGSKOLA",
+];
+
+export type StudentInfo = {
+  isStudent: boolean;
+  educationLevel: EducationLevel | null;
+  gymnasieProgram: string | null;
+  educationName: string | null;
+  institutionName: string | null;
+};
+
+// Combined shape stored in Profile.preferences. JobSearchPreferences drives
+// the JobTech query directly; student is contextual candidate info (shown on
+// the profile, and available to feed into AI matching/generation later).
+export type ProfilePreferences = JobSearchPreferences & { student: StudentInfo };
+
 export type ParsePreferencesResult =
-  | { ok: true; preferences: JobSearchPreferences }
+  | { ok: true; preferences: ProfilePreferences }
   | { ok: false; error: string };
+
+function parseStudentInfo(formData: FormData): StudentInfo {
+  const isStudent = formData.get("isStudent") === "true";
+  if (!isStudent) {
+    return {
+      isStudent: false,
+      educationLevel: null,
+      gymnasieProgram: null,
+      educationName: null,
+      institutionName: null,
+    };
+  }
+
+  const rawLevel = String(formData.get("educationLevel") ?? "");
+  const educationLevel = VALID_EDUCATION_LEVELS.includes(
+    rawLevel as EducationLevel,
+  )
+    ? (rawLevel as EducationLevel)
+    : null;
+
+  return {
+    isStudent: true,
+    educationLevel,
+    gymnasieProgram:
+      educationLevel === "GYMNASIUM"
+        ? String(formData.get("gymnasieProgram") ?? "").trim() || null
+        : null,
+    educationName:
+      educationLevel === "UNIVERSITY" || educationLevel === "FOLKHOGSKOLA"
+        ? String(formData.get("educationName") ?? "").trim() || null
+        : null,
+    institutionName:
+      educationLevel === "UNIVERSITY" || educationLevel === "FOLKHOGSKOLA"
+        ? String(formData.get("institutionName") ?? "").trim() || null
+        : null,
+  };
+}
 
 export function parsePreferencesFromFormData(
   formData: FormData,
@@ -39,5 +97,10 @@ export function parsePreferencesFromFormData(
     return { ok: false, error: "Välj minst en kommun." };
   }
 
-  return { ok: true, preferences: { roles, municipalityIds, employmentTypes } };
+  const student = parseStudentInfo(formData);
+
+  return {
+    ok: true,
+    preferences: { roles, municipalityIds, employmentTypes, student },
+  };
 }

@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { MunicipalityPicker } from "@/components/MunicipalityPicker";
 import { EmploymentTypeCheckboxes } from "@/components/EmploymentTypeCheckboxes";
+import { StudentInfoFields } from "@/components/StudentInfoFields";
 import { submitOnboarding, type OnboardingState } from "./actions";
 
 const initialState: OnboardingState = { error: null };
@@ -34,6 +35,8 @@ export function OnboardingForm() {
         <span className="text-sm font-medium">Typ av anställning</span>
         <EmploymentTypeCheckboxes name="employmentTypes" />
       </div>
+
+      <StudentInfoFields />
 
       <label className="flex flex-col gap-1">
         <span className="text-sm font-medium">Master-CV (PDF)</span>

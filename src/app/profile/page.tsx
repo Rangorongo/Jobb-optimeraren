@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import type { JobSearchPreferences } from "@/lib/jobtech";
+import type { ProfilePreferences } from "@/lib/preferences-form";
 import { ProfileForm } from "./ProfileForm";
 
 export default async function ProfilePage() {
@@ -18,7 +18,8 @@ export default async function ProfilePage() {
     redirect("/onboarding");
   }
 
-  const preferences = profile.preferences as JobSearchPreferences;
+  const preferences = profile.preferences as Partial<ProfilePreferences>;
+  const student = preferences.student;
 
   return (
     <div className="p-8">
@@ -27,6 +28,11 @@ export default async function ProfilePage() {
         defaultRoles={preferences.roles?.join(", ") ?? ""}
         defaultMunicipalityIds={preferences.municipalityIds ?? []}
         defaultEmploymentTypes={preferences.employmentTypes ?? []}
+        defaultIsStudent={student?.isStudent ?? false}
+        defaultEducationLevel={student?.educationLevel ?? null}
+        defaultGymnasieProgram={student?.gymnasieProgram ?? ""}
+        defaultEducationName={student?.educationName ?? ""}
+        defaultInstitutionName={student?.institutionName ?? ""}
         masterCvFileUrl={profile.masterCvFileUrl}
       />
     </div>

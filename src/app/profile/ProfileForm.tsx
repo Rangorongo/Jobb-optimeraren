@@ -3,6 +3,8 @@
 import { useActionState } from "react";
 import { MunicipalityPicker } from "@/components/MunicipalityPicker";
 import { EmploymentTypeCheckboxes } from "@/components/EmploymentTypeCheckboxes";
+import { StudentInfoFields } from "@/components/StudentInfoFields";
+import type { EducationLevel } from "@/lib/preferences-form";
 import { updateProfile, type ProfileState } from "./actions";
 
 const initialState: ProfileState = { error: null };
@@ -11,11 +13,21 @@ export function ProfileForm({
   defaultRoles,
   defaultMunicipalityIds,
   defaultEmploymentTypes,
+  defaultIsStudent,
+  defaultEducationLevel,
+  defaultGymnasieProgram,
+  defaultEducationName,
+  defaultInstitutionName,
   masterCvFileUrl,
 }: {
   defaultRoles: string;
   defaultMunicipalityIds: string[];
   defaultEmploymentTypes: string[];
+  defaultIsStudent: boolean;
+  defaultEducationLevel: EducationLevel | null;
+  defaultGymnasieProgram: string;
+  defaultEducationName: string;
+  defaultInstitutionName: string;
   masterCvFileUrl: string | null;
 }) {
   const [state, formAction, isPending] = useActionState(
@@ -50,6 +62,14 @@ export function ProfileForm({
           defaultValues={defaultEmploymentTypes}
         />
       </div>
+
+      <StudentInfoFields
+        defaultIsStudent={defaultIsStudent}
+        defaultEducationLevel={defaultEducationLevel}
+        defaultGymnasieProgram={defaultGymnasieProgram}
+        defaultEducationName={defaultEducationName}
+        defaultInstitutionName={defaultInstitutionName}
+      />
 
       <label className="flex flex-col gap-1">
         <span className="text-sm font-medium">Master-CV (PDF)</span>
