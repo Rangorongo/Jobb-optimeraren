@@ -1,4 +1,4 @@
-import { auth, signIn, signOut } from "@/lib/auth";
+import { auth, signOut } from "@/lib/auth";
 
 export default async function Home() {
   const session = await auth();
@@ -33,32 +33,18 @@ export default async function Home() {
         </div>
       ) : (
         <div className="flex flex-col gap-3">
-          <form
-            action={async () => {
-              "use server";
-              await signIn("google");
-            }}
+          <a
+            href="/login"
+            className="rounded-full bg-black px-5 py-3 text-center text-white dark:bg-white dark:text-black"
           >
-            <button
-              type="submit"
-              className="rounded-full bg-black px-5 py-3 text-white dark:bg-white dark:text-black"
-            >
-              Logga in med Google
-            </button>
-          </form>
-          <form
-            action={async () => {
-              "use server";
-              await signIn("linkedin");
-            }}
+            Logga in
+          </a>
+          <a
+            href="/signup"
+            className="rounded-full border border-black/[.1] px-5 py-3 text-center dark:border-white/[.15]"
           >
-            <button
-              type="submit"
-              className="rounded-full border border-black/[.1] px-5 py-3 dark:border-white/[.15]"
-            >
-              Logga in med LinkedIn
-            </button>
-          </form>
+            Skapa konto
+          </a>
         </div>
       )}
     </div>

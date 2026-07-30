@@ -8,7 +8,7 @@ export default auth((req) => {
     req.nextUrl.pathname.startsWith(path),
   );
   if (isProtected && !req.auth) {
-    const signInUrl = new URL("/api/auth/signin", req.nextUrl.origin);
+    const signInUrl = new URL("/login", req.nextUrl.origin);
     return NextResponse.redirect(signInUrl);
   }
 });

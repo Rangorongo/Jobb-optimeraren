@@ -1,26 +1,45 @@
 import NextAuth from "next-auth";
-import Google from "next-auth/providers/google";
-import LinkedIn from "next-auth/providers/linkedin";
+import Credentials from "next-auth/providers/credentials";
+import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   basePath: "/api/auth",
-  providers: [Google, LinkedIn],
+  providers: [
+    Credentials({
+      credentials: {
+        email: { label: "E-post", type: "email" },
+        password: { label: "Lösenord", type: "password" },
+      },
+      async authorize(credentials) {
+        const email = credentials?.email;
+        const password = credentials?.password;
+        if (typeof email !== "string" || typeof password !== "string") {
+          return null;
+        }
+
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user?.passwordHash) {
+          return null;
+        }
+
+        const valid = await bcrypt.compare(password, user.passwordHash);
+        if (!valid) {
+          return null;
+        }
+
+        return { id: user.id, email: user.email, name: user.name };
+      },
+    }),
+  ],
   session: { strategy: "jwt" },
+  pages: {
+    signIn: "/login",
+  },
   callbacks: {
-    async jwt({ token, user, account }) {
-      const email = user?.email ?? token.email;
-      if (email) {
-        const dbUser = await prisma.user.upsert({
-          where: { email },
-          update: {},
-          create: {
-            email,
-            name: user?.name ?? null,
-            authProvider: account?.provider ?? "unknown",
-          },
-        });
-        token.userId = dbUser.id;
+    async jwt({ token, user }) {
+      if (user?.id) {
+        token.userId = user.id;
       }
       return token;
     },
