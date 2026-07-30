@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { auth } from "@/lib/auth";
+import { requireValidSessionUserId } from "@/lib/session";
 import { structureCv } from "@/lib/gemini";
 import { extractTextFromPdf } from "@/lib/cv-file";
 import { uploadFile } from "@/lib/storage";
@@ -17,8 +17,8 @@ export async function updateProfile(
   _prevState: ProfileState,
   formData: FormData,
 ): Promise<ProfileState> {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const userId = await requireValidSessionUserId();
+  if (!userId) {
     return { error: "Du måste vara inloggad." };
   }
 
@@ -36,7 +36,7 @@ export async function updateProfile(
   if (cvFile && cvFile.size > 0) {
     const buffer = Buffer.from(await cvFile.arrayBuffer());
     masterCvFileUrl = await uploadFile(
-      `cv/${session.user.id}-${Date.now()}.pdf`,
+      `cv/${userId}-${Date.now()}.pdf`,
       buffer,
       "application/pdf",
     );
@@ -45,15 +45,12 @@ export async function updateProfile(
       const cvText = await extractTextFromPdf(buffer);
       structuredCv = await structureCv(cvText);
     } catch (err) {
-      console.error(
-        `CV-strukturering misslyckades för user ${session.user.id}`,
-        err,
-      );
+      console.error(`CV-strukturering misslyckades för user ${userId}`, err);
     }
   }
 
   await prisma.profile.update({
-    where: { userId: session.user.id },
+    where: { userId },
     data: {
       preferences,
       ...(masterCvFileUrl ? { masterCvFileUrl } : {}),

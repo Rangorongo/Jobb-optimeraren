@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth";
+import { requireValidSessionUserId } from "@/lib/session";
 import { structureCv } from "@/lib/gemini";
 import { extractTextFromPdf } from "@/lib/cv-file";
 import { uploadFile } from "@/lib/storage";
@@ -16,8 +16,8 @@ export async function submitOnboarding(
   _prevState: OnboardingState,
   formData: FormData,
 ): Promise<OnboardingState> {
-  const session = await auth();
-  if (!session?.user?.id) {
+  const userId = await requireValidSessionUserId();
+  if (!userId) {
     return { error: "Du måste vara inloggad." };
   }
 
@@ -34,7 +34,7 @@ export async function submitOnboarding(
 
   const buffer = Buffer.from(await cvFile.arrayBuffer());
   const masterCvFileUrl = await uploadFile(
-    `cv/${session.user.id}-${Date.now()}.pdf`,
+    `cv/${userId}-${Date.now()}.pdf`,
     buffer,
     "application/pdf",
   );
@@ -46,18 +46,18 @@ export async function submitOnboarding(
   } catch (err) {
     // CV-parsing misslyckades - blockera inte onboarding, spara utan strukturerad data.
     // Kunden kan komplettera profilen manuellt senare.
-    console.error(`CV-strukturering misslyckades för user ${session.user.id}`, err);
+    console.error(`CV-strukturering misslyckades för user ${userId}`, err);
   }
 
   await prisma.profile.upsert({
-    where: { userId: session.user.id },
+    where: { userId },
     update: {
       preferences,
       masterCvFileUrl,
       structuredCv: structuredCv ?? undefined,
     },
     create: {
-      userId: session.user.id,
+      userId,
       preferences,
       masterCvFileUrl,
       structuredCv: structuredCv ?? undefined,
