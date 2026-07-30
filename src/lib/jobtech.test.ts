@@ -24,7 +24,11 @@ describe("searchJobs", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    const ads = await searchJobs(["frontend-utvecklare"], ["Stockholm"]);
+    const ads = await searchJobs({
+      roles: ["frontend-utvecklare"],
+      municipalityIds: ["AvNB_uwa_6n6"],
+      employmentTypes: [],
+    });
 
     expect(ads).toHaveLength(1);
     expect(ads[0]).toEqual({
@@ -37,12 +41,40 @@ describe("searchJobs", () => {
     });
   });
 
+  it("builds municipality, employment-type, worktime-extent and trainee query params", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue({ ok: true, json: async () => ({ hits: [] }) });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await searchJobs({
+      roles: ["utvecklare"],
+      municipalityIds: ["AvNB_uwa_6n6", "PVZL_BQT_XtL"],
+      employmentTypes: ["PERMANENT", "PART_TIME", "INTERNSHIP"],
+    });
+
+    const calledUrl = new URL(fetchMock.mock.calls[0][0]);
+    expect(calledUrl.searchParams.getAll("municipality")).toEqual([
+      "AvNB_uwa_6n6",
+      "PVZL_BQT_XtL",
+    ]);
+    expect(calledUrl.searchParams.get("employment-type")).toBe("kpPX_CNN_gDU");
+    expect(calledUrl.searchParams.get("worktime-extent")).toBe("947z_JGS_Uk2");
+    expect(calledUrl.searchParams.get("trainee")).toBe("true");
+  });
+
   it("throws when the API responds with an error status", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({ ok: false, status: 500 }),
     );
 
-    await expect(searchJobs(["utvecklare"], ["Stockholm"])).rejects.toThrow();
+    await expect(
+      searchJobs({
+        roles: ["utvecklare"],
+        municipalityIds: ["AvNB_uwa_6n6"],
+        employmentTypes: [],
+      }),
+    ).rejects.toThrow();
   });
 });

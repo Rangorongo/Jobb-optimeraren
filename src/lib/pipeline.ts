@@ -1,7 +1,7 @@
 import type { StructuredCv } from "./gemini";
 import { generateApplicationDocuments } from "./documents";
 import { sendNewMatchesEmail } from "./email";
-import { searchJobs } from "./jobtech";
+import { searchJobs, type JobSearchPreferences } from "./jobtech";
 import { scoreJobMatches } from "./matching";
 import { coverLetterHtmlTemplate, cvHtmlTemplate } from "./pdf-templates";
 import { renderHtmlToPdf } from "./pdf";
@@ -10,11 +10,6 @@ import { uploadFile } from "./storage";
 
 const MAX_NEW_MATCHES_PER_RUN = 5;
 const MIN_MATCH_SCORE = 0.5;
-
-type Preferences = {
-  roles: string[];
-  locations: string[];
-};
 
 export async function runMatchingPipelineForUser(userId: string) {
   const profile = await prisma.profile.findUnique({
@@ -25,8 +20,8 @@ export async function runMatchingPipelineForUser(userId: string) {
     return;
   }
 
-  const preferences = profile.preferences as Preferences;
-  const ads = await searchJobs(preferences.roles, preferences.locations);
+  const preferences = profile.preferences as JobSearchPreferences;
+  const ads = await searchJobs(preferences);
   if (ads.length === 0) {
     return;
   }

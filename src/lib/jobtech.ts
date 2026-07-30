@@ -1,3 +1,8 @@
+import {
+  EMPLOYMENT_TYPE_CONCEPT_IDS,
+  type EmploymentType,
+} from "./employment-types";
+
 const JOBTECH_BASE_URL = "https://jobsearch.api.jobtechdev.se/search";
 
 export type JobAd = {
@@ -7,6 +12,12 @@ export type JobAd = {
   url: string;
   rawAdText: string;
   deadline: Date | null;
+};
+
+export type JobSearchPreferences = {
+  roles: string[];
+  municipalityIds: string[];
+  employmentTypes: EmploymentType[];
 };
 
 type JobTechHit = {
@@ -23,12 +34,27 @@ type JobTechResponse = {
 };
 
 export async function searchJobs(
-  roles: string[],
-  locations: string[],
+  preferences: JobSearchPreferences,
   limit = 20,
 ): Promise<JobAd[]> {
-  const query = [...roles, ...locations].join(" ");
-  const url = `${JOBTECH_BASE_URL}?q=${encodeURIComponent(query)}&limit=${limit}`;
+  const params = new URLSearchParams();
+  params.set("q", preferences.roles.join(" "));
+  params.set("limit", String(limit));
+
+  for (const municipalityId of preferences.municipalityIds) {
+    params.append("municipality", municipalityId);
+  }
+
+  for (const employmentType of preferences.employmentTypes) {
+    if (employmentType === "INTERNSHIP") {
+      params.set("trainee", "true");
+      continue;
+    }
+    const concept = EMPLOYMENT_TYPE_CONCEPT_IDS[employmentType];
+    params.append(concept.param, concept.id);
+  }
+
+  const url = `${JOBTECH_BASE_URL}?${params.toString()}`;
 
   const response = await fetch(url);
   if (!response.ok) {

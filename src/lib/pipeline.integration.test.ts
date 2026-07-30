@@ -57,7 +57,8 @@ describe("runMatchingPipelineForUser (integration)", () => {
           create: {
             preferences: {
               roles: ["frontend-utvecklare"],
-              locations: ["Stockholm"],
+              municipalityIds: ["AvNB_uwa_6n6"],
+              employmentTypes: [],
             },
             structuredCv: {
               fullName: "Fixture Testsson",

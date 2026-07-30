@@ -16,7 +16,12 @@ export default async function DashboardPage() {
 
   return (
     <div className="p-8">
-      <h1 className="mb-6 text-xl font-semibold">Dina ansökningar</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-xl font-semibold">Dina ansökningar</h1>
+        <a href="/profile" className="text-sm underline">
+          Min profil
+        </a>
+      </div>
       <KanbanBoard matches={matches} />
     </div>
   );
